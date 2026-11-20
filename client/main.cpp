@@ -4,6 +4,7 @@
 
 #include "Socket.h"
 #include "WinsockRuntime.h"
+#include "MessageProtocol.h"
 
 int main()
 {
@@ -29,11 +30,7 @@ int main()
 
         for (const auto& message : messages)
         {
-            const uint32_t messageLength = static_cast<uint32_t>(message.size());
-            const uint32_t networkMessageLength = htonl(messageLength);
-
-            clientSocket.SendAll(&networkMessageLength, sizeof(networkMessageLength));
-            clientSocket.SendAll(message.data(), messageLength);
+            networking::protocol::SendMessage(clientSocket, message);
         }
     }
     catch (const std::exception& e)

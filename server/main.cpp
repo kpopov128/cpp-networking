@@ -5,6 +5,7 @@
 
 #include "Socket.h"
 #include "WinsockRuntime.h"
+#include "MessageProtocol.h"
 
 namespace 
 {
@@ -40,19 +41,7 @@ int main()
 
         for (int i = 0; i < 3; ++i)
         {
-            uint32_t networkLength = 0;
-            clientSocket.RecvAll(&networkLength, sizeof(networkLength));
-
-            const uint32_t clientBufferSize = ntohl(networkLength);
-
-            if (clientBufferSize > MAX_BUFFER_SIZE)
-                throw std::invalid_argument("Invalid recv request buffer size from client!");
-
-            auto recvBuffer = std::make_unique<char[]>(clientBufferSize);
-
-            clientSocket.RecvAll(recvBuffer.get(), clientBufferSize);
-
-            std::cout << "Received: " << std::string(recvBuffer.get(), clientBufferSize) << std::endl;
+            std::cout << "Message received -> " << networking::protocol::ReceiveMessage(clientSocket) << std::endl;
         }
       
     }

@@ -6,6 +6,11 @@
 #include "Socket.h"
 #include "WinsockRuntime.h"
 
+namespace 
+{
+    constexpr size_t MAX_BUFFER_SIZE = (64 * 1024);
+}
+
 int main()
 {
     try
@@ -33,20 +38,23 @@ int main()
 
         std::cout << "Client connected!" << std::endl;
 
-        const int clientBufferSize = 1024;
-        char buffer[clientBufferSize];
-
-        const int bytesReceived = clientSocket.Recv(static_cast<void*>(buffer), sizeof(buffer));
-
-        if (bytesReceived > 0)
+        for (int i = 0; i < 3; ++i)
         {
-            std::string message(buffer, bytesReceived);
-            std::cout << "Received: " << message << std::endl;
+            uint32_t networkLength = 0;
+            clientSocket.RecvAll(&networkLength, sizeof(networkLength));
+
+            const uint32_t clientBufferSize = ntohl(networkLength);
+
+            if (clientBufferSize > MAX_BUFFER_SIZE)
+                throw std::invalid_argument("Invalid recv request buffer size from client!");
+
+            auto recvBuffer = std::make_unique<char[]>(clientBufferSize);
+
+            clientSocket.RecvAll(recvBuffer.get(), clientBufferSize);
+
+            std::cout << "Received: " << std::string(recvBuffer.get(), clientBufferSize) << std::endl;
         }
-        else if (bytesReceived == 0)
-        {
-            std::cout << "Client disconnected." << std::endl;
-        }
+      
     }
     catch (const std::exception& e)
     {

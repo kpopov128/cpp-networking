@@ -25,10 +25,16 @@ int main()
 
         std::cout << "Client connected!" << std::endl;
 
-        constexpr auto message = "Hello Server!";
+        constexpr std::string_view messages[] = {"Hello Server!", "Today is friday", "Have a nice day!"};
 
-        clientSocket.Send(static_cast<const void*>(message), std::strlen(message));
+        for (const auto& message : messages)
+        {
+            const uint32_t messageLength = static_cast<uint32_t>(message.size());
+            const uint32_t networkMessageLength = htonl(messageLength);
 
+            clientSocket.SendAll(&networkMessageLength, sizeof(networkMessageLength));
+            clientSocket.SendAll(message.data(), messageLength);
+        }
     }
     catch (const std::exception& e)
     {

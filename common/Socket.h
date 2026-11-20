@@ -26,7 +26,10 @@ public:
 	void Listen(int backlog = SOMAXCONN);
 
 	int Send(const void* data, int size);
+	void SendAll(const void* data, int size);
+
 	int Recv(void* buffer, int size);
+	void RecvAll(void* buffer, int size);
 
 private:
 	SOCKET socketHandle{INVALID_SOCKET};

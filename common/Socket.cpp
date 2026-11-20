@@ -111,6 +111,31 @@ int Socket::Send(const void* data, int size)
 	return sendResult;
 }
 
+void Socket::SendAll(const void* data, int size)
+{
+	if (size < 0)
+		throw std::invalid_argument("Invalid send buffer size");
+
+	if (size == 0)
+		return;
+
+	if (data == nullptr)
+		throw std::invalid_argument("Invalid send buffer data");
+
+	const auto* bytes = static_cast<const char*>(data);
+	int bytesSent = 0;
+
+	while (bytesSent < size)
+	{
+		const int currentBytesSent = Send((bytes + bytesSent), (size - bytesSent));
+
+		if (currentBytesSent < 1)
+			throw std::runtime_error("send() made no progress");
+
+		bytesSent += currentBytesSent;
+	}
+}
+
 int Socket::Recv(void* buffer, int size)
 {
 	const auto recvResult = recv(socketHandle, reinterpret_cast<char*>(buffer), size, 0);
@@ -119,6 +144,31 @@ int Socket::Recv(void* buffer, int size)
 		throw std::system_error(WSAGetLastError(), std::system_category(), "recv() failed");
 
 	return recvResult;
+}
+
+void Socket::RecvAll(void* buffer, int size)
+{
+	if (size < 0)
+		throw std::invalid_argument("Invalid recv buffer size");
+
+	if (size == 0)
+		return;
+
+	if (buffer == nullptr)
+		throw std::invalid_argument("Invalid recv buffer");
+
+	auto* bytes = static_cast<char*>(buffer);
+	int bytesReceived = 0;
+
+	while (bytesReceived < size)
+	{
+		const int currentBytesReceived = Recv((bytes + bytesReceived), (size - bytesReceived));
+
+		if (currentBytesReceived == 0)
+			throw std::runtime_error("Connection closed before receiving all data");
+
+		bytesReceived += currentBytesReceived;
+	}
 }
 
 void Socket::Close() noexcept

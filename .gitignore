@@ -1,0 +1,16 @@
+# Build output
+/build/
+/vs_project/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.VC.db
+*.VC.opendb
+
+# Temporary files
+*.obj
+*.pdb
+*.ilk
+*.exe

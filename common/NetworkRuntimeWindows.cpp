@@ -1,4 +1,4 @@
-#include "WinsockRuntime.h"
+#include "NetworkRuntime.h"
 
 #include <winsock2.h>
 #include <system_error>
@@ -8,7 +8,7 @@
 namespace networking
 {
 
-WinsockRuntime::WinsockRuntime()
+NetworkRuntime::NetworkRuntime()
 {
     WSADATA data{};
 
@@ -31,7 +31,7 @@ WinsockRuntime::WinsockRuntime()
     std::cout << "Winsock initialized successfully!" << std::endl;
 }
 
-WinsockRuntime::~WinsockRuntime()
+NetworkRuntime::~NetworkRuntime()
 {
     WSACleanup();
 }

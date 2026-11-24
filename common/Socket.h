@@ -1,8 +1,8 @@
-#pragma once 
+#pragma once
+
+#include "SocketPlatform.h"
 
 #include <string>
-#include <winsock2.h>
-#include <ws2tcpip.h>
 
 namespace networking
 {
@@ -11,7 +11,7 @@ class Socket
 {
 public:
 	Socket();
-	Socket(SOCKET socket) : socketHandle{socket} {}
+    Socket(SocketHandle socket) : socketHandle{socket} {}
 	Socket(Socket&& b) noexcept;
 	Socket(const Socket& b) = delete;
 	~Socket();
@@ -32,7 +32,7 @@ public:
 	void RecvAll(void* buffer, int size);
 
 private:
-	SOCKET socketHandle{INVALID_SOCKET};
+    SocketHandle socketHandle{InvalidSocket};
 };
 
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Socket.h"
-#include "WinsockRuntime.h"
+#include "NetworkRuntime.h"
 
 #include <cstdint>
 #include <string>
@@ -20,7 +20,7 @@ private:
     void HandleClient(Socket clientSocket);
 
 private:
-    WinsockRuntime winsockRuntime;
+    NetworkRuntime winsockRuntime;
     Socket serverSocket;
 };
 

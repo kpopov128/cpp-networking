@@ -3,7 +3,7 @@
 #include <exception>
 
 #include "Socket.h"
-#include "WinsockRuntime.h"
+#include "NetworkRuntime.h"
 #include "MessageProtocol.h"
 
 int main()
@@ -12,7 +12,7 @@ int main()
     {
         std::cout << "Initializing Winsock..." << std::endl;
 
-        networking::WinsockRuntime winsock;
+        networking::NetworkRuntime winsock;
 
         std::cout << "Winsock initialized successfully!" << std::endl;
 

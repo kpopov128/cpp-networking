@@ -30,6 +30,8 @@ target_link_libraries(common PUBLIC ws2_32)
 # TCP server
 add_executable(server
     server/main.cpp
+    server/TcpServer.h
+    server/TcpServer.cpp
 )
 
 target_link_libraries(server PRIVATE common)

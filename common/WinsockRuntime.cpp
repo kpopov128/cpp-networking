@@ -3,6 +3,7 @@
 #include <winsock2.h>
 #include <system_error>
 #include <stdexcept>
+#include <iostream>
 
 namespace networking
 {
@@ -10,6 +11,8 @@ namespace networking
 WinsockRuntime::WinsockRuntime()
 {
     WSADATA data{};
+
+    std::cout << "Initializing Winsock..." << std::endl;
 
     const int result = WSAStartup(WINSOCK_VERSION, &data);
 
@@ -24,6 +27,8 @@ WinsockRuntime::WinsockRuntime()
 
         throw std::runtime_error("Unsupported Winsock version");
     }
+
+    std::cout << "Winsock initialized successfully!" << std::endl;
 }
 
 WinsockRuntime::~WinsockRuntime()

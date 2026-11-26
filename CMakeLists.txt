@@ -15,6 +15,8 @@ add_library(common STATIC
     common/Socket.h
     common/SocketPlatform.h
     common/Socket.cpp
+    common/Thread.h
+    common/Thread.cpp
     common/NetworkRuntime.h
     common/MessageProtocol.h
     common/MessageProtocol.cpp
@@ -46,6 +48,8 @@ add_executable(server
     server/main.cpp
     server/TcpServer.h
     server/TcpServer.cpp
+    server/ClientConnection.h
+    server/ClientConnection.cpp
 )
 
 target_link_libraries(server PRIVATE common)
@@ -53,6 +57,8 @@ target_link_libraries(server PRIVATE common)
 # TCP client
 add_executable(client
     client/main.cpp
+    client/TcpClient.h
+    client/TcpClient.cpp
 )
 
 target_link_libraries(client PRIVATE common)

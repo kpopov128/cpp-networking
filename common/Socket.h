@@ -29,7 +29,7 @@ public:
 	void SendAll(const void* data, int size);
 
 	int Recv(void* buffer, int size);
-	void RecvAll(void* buffer, int size);
+    bool RecvAll(void* buffer, int size);
 
 private:
     SocketHandle socketHandle{InvalidSocket};

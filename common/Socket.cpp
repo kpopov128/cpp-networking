@@ -146,13 +146,13 @@ int Socket::Recv(void* buffer, int size)
 	return recvResult;
 }
 
-void Socket::RecvAll(void* buffer, int size)
+bool Socket::RecvAll(void* buffer, int size)
 {
 	if (size < 0)
 		throw std::invalid_argument("Invalid recv buffer size");
 
 	if (size == 0)
-		return;
+        return true;
 
 	if (buffer == nullptr)
 		throw std::invalid_argument("Invalid recv buffer");
@@ -164,11 +164,18 @@ void Socket::RecvAll(void* buffer, int size)
 	{
 		const int currentBytesReceived = Recv((bytes + bytesReceived), (size - bytesReceived));
 
-		if (currentBytesReceived == 0)
-			throw std::runtime_error("Connection closed before receiving all data");
+        if (currentBytesReceived == 0)
+        {
+            if (bytesReceived == 0)
+                return false;
+
+            throw std::runtime_error("Connection closed before receiving all data");
+        }
 
 		bytesReceived += currentBytesReceived;
 	}
+
+    return true;
 }
 
 void Socket::Close() noexcept

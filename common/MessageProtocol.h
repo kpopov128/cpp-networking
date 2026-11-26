@@ -2,6 +2,7 @@
 
 #include <string>
 #include <string_view>
+#include <optional>
 
 namespace networking
 {
@@ -11,6 +12,6 @@ namespace protocol
 {
 
 	void SendMessage(Socket& socket, std::string_view message);
-	std::string ReceiveMessage(Socket& socket);
+    std::optional<std::string> ReceiveMessage(Socket& socket);
 
 }}

@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <stdexcept>
-#include <memory>
+#include <limits>
 
 namespace networking::protocol
 {
@@ -11,6 +11,8 @@ namespace networking::protocol
 namespace
 {
     constexpr uint32_t MAX_MESSAGE_SIZE = 64 * 1024;
+
+    static_assert(MAX_MESSAGE_SIZE <= std::numeric_limits<int>::max(), "MAX_MESSAGE_SIZE exceeds the supported socket buffer size");
 }
 
 void SendMessage(Socket& socket, std::string_view message)
@@ -25,19 +27,22 @@ void SendMessage(Socket& socket, std::string_view message)
     socket.SendAll(message.data(), messageLength);
 }
 
-std::string ReceiveMessage(Socket& socket)
+std::optional<std::string> ReceiveMessage(Socket& socket)
 {
     uint32_t networkLength = 0;
-    socket.RecvAll(&networkLength, sizeof(networkLength));
+
+    if (!socket.RecvAll(&networkLength, sizeof(networkLength)))
+        return std::nullopt;
 
     const uint32_t messageLength = ntohl(networkLength);
 
     if (messageLength > MAX_MESSAGE_SIZE)
-        throw std::invalid_argument("Received message exceeds maximum allowed size!");
+        throw std::runtime_error("Received message exceeds maximum allowed size!");
 
     std::string message(messageLength, '\0');
 
-    socket.RecvAll(message.data(), messageLength);
+    if (!socket.RecvAll(message.data(), messageLength))
+        throw std::runtime_error("Connection closed before receiving a message, after receiving a header!");
 
     return message;
 }

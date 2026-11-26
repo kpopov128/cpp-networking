@@ -1,5 +1,5 @@
 #include "TcpServer.h"
-#include "MessageProtocol.h"
+#include "Thread.h"
 
 #include <iostream>
 #include <utility>
@@ -23,20 +23,38 @@ void TcpServer::Run()
 
     std::cout << "Listening started, waiting for client..." << std::endl;
 
+    Thread acceptClientsThread([this]()
+    {
+        AcceptClients();
+    });
+
     while (true)
     {
-        HandleClient(serverSocket.Accept());
+        Socket clientSocket;
+        { // begin critical section
+            std::lock_guard lock(acceptedClientsMutex);
+            if (acceptedClients.empty())
+                continue;
+
+            clientSocket = std::move(acceptedClients.front());
+            acceptedClients.pop();
+        } // end critical section
+
+        auto clientConnection = std::make_unique<ClientConnection>(std::move(clientSocket));
+        clientConnections[clientConnection->GetThreadId()] = std::move(clientConnection);
     }
 }
 
-void TcpServer::HandleClient(Socket clientSocket)
+void TcpServer::AcceptClients()
 {
-    std::cout << "Client connected!" << std::endl;
-
-    for (int i = 0; i < 3; ++i)
+    while (true)
     {
-        std::cout << "Message received -> " << networking::protocol::ReceiveMessage(clientSocket) << std::endl;
-    }   
+        auto client = serverSocket.Accept();
+        std::cout << "Client connected!" << std::endl;
+
+        std::lock_guard lock(acceptedClientsMutex);
+        acceptedClients.push(std::move(client));
+    }
 }
 
 }

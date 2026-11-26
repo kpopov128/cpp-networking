@@ -50,6 +50,6 @@ inline void CloseSocket(SocketHandle socket) noexcept
     close(socket);
 }
 
-#endif
+#endif // #ifdef _WIN32
 
 }

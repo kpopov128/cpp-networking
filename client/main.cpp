@@ -3,6 +3,7 @@
 #include <exception>
 
 #include "Socket.h"
+#include "TcpClient.h"
 #include "NetworkRuntime.h"
 #include "MessageProtocol.h"
 
@@ -10,27 +11,41 @@ int main()
 {
     try
     {
-        std::cout << "Initializing Winsock..." << std::endl;
+        std::cout << "Initializing NetworkRuntime..." << std::endl;
 
-        networking::NetworkRuntime winsock;
+        networking::NetworkRuntime neworkRuntime;
 
-        std::cout << "Winsock initialized successfully!" << std::endl;
+        std::cout << "NetworkRuntime initialized successfully!" << std::endl;
 
-        networking::Socket clientSocket;
+        networking::TcpClient client("127.0.0.1", 9000); //,
 
         std::cout << "Client socket created!" << std::endl;
 
         std::cout << "Connecting client socket to 127.0.0.1:9000..." << std::endl;
 
-        clientSocket.Connect("127.0.0.1", 9000);
+        client.Connect();
 
         std::cout << "Client connected!" << std::endl;
 
-        constexpr std::string_view messages[] = {"Hello Server!", "Today is friday", "Have a nice day!"};
-
-        for (const auto& message : messages)
+        while (true)
         {
-            networking::protocol::SendMessage(clientSocket, message);
+            std::cout << "Enter the message for the server: ";
+            std::string message;
+
+            if (!std::getline(std::cin, message) || message == "exit")
+                break;
+
+            client.SendMessage(message);
+
+            const auto& serverReply = client.ReceiveMessage();
+
+            if (!serverReply)
+            {
+                std::cout << "Server disconnected!\n Exiting..." << std::endl;
+                break;
+            }
+
+            std::cout << "Received message from the server: " << serverReply.value() << std::endl;
         }
     }
     catch (const std::exception& e)

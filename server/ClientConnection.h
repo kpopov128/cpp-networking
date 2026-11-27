@@ -3,6 +3,7 @@
 #include "Socket.h"
 #include "Thread.h"
 
+#include <functional>
 
 namespace networking
 {
@@ -10,7 +11,7 @@ namespace networking
 class ClientConnection
 {
 public:
-    explicit ClientConnection(Socket&& socket);
+    ClientConnection(Socket&& socket, std::function<void(const std::thread::id)>&& disconnectedCb);
 
     ~ClientConnection() = default;
 
@@ -27,6 +28,7 @@ private:
 
 private:
     Socket clientSocket;
+    std::function<void(const std::thread::id)> clientDisconnectedCb;
     Thread clientThread;
 };
 

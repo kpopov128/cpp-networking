@@ -9,8 +9,8 @@
 namespace networking
 {
 
-ClientConnection::ClientConnection(Socket&& socket)
-    : clientSocket{std::move(socket)}, clientThread{[this]{ HandleConnection(); }}
+ClientConnection::ClientConnection(Socket&& socket, std::function<void(const std::thread::id)>&& disconnectedCb)
+    : clientSocket{std::move(socket)}, clientDisconnectedCb{std::move(disconnectedCb)}, clientThread{[this]{HandleConnection();}}
 {
 
 }
@@ -39,6 +39,8 @@ void ClientConnection::HandleConnection()
     {
         std::cerr << "Client communication error: " << e.what() << std::endl;
     }
+
+    clientDisconnectedCb(std::this_thread::get_id());
 }
 
 } // namespace networking

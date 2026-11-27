@@ -28,20 +28,49 @@ void TcpServer::Run()
         AcceptClients();
     });
 
+    TcpServerEvent serverEvent;
     while (true)
     {
-        Socket clientSocket;
         { // begin critical section
-            std::lock_guard lock(acceptedClientsMutex);
-            if (acceptedClients.empty())
-                continue;
+            std::unique_lock lock(eventsMutex);
 
-            clientSocket = std::move(acceptedClients.front());
-            acceptedClients.pop();
+            while (serverEvents.empty())
+            {
+                eventsCondition.wait(lock);
+            }
+
+            serverEvent = std::move(serverEvents.front());
+            serverEvents.pop();
         } // end critical section
 
-        auto clientConnection = std::make_unique<ClientConnection>(std::move(clientSocket));
-        clientConnections[clientConnection->GetThreadId()] = std::move(clientConnection);
+        switch(serverEvent.eventType)
+        {
+            case TcpServerEvent::Type::eClientAccepted:
+            {
+                auto disconnectCb = [this](const std::thread::id threadId)
+                {
+                    { // begin critical section
+                        std::lock_guard lock(eventsMutex);
+                        serverEvents.push(TcpServerEvent(threadId));
+                    } // end critical section
+
+                    eventsCondition.notify_one();
+                };
+
+                auto clientConnection = std::make_unique<ClientConnection>(std::move(serverEvent.clientSocket.value()), std::move(disconnectCb));
+                clientConnections[clientConnection->GetThreadId()] = std::move(clientConnection);
+            }
+            break;
+
+            case TcpServerEvent::Type::eClientDisconnected:
+            {
+                auto it = clientConnections.find(serverEvent.threadId.value());
+
+                if (it != clientConnections.end())
+                    clientConnections.erase(it);
+            }
+            break;
+        }
     }
 }
 
@@ -52,9 +81,12 @@ void TcpServer::AcceptClients()
         auto client = serverSocket.Accept();
         std::cout << "Client connected!" << std::endl;
 
-        std::lock_guard lock(acceptedClientsMutex);
-        acceptedClients.push(std::move(client));
+        { // begin critical section
+            std::lock_guard lock(eventsMutex);
+            serverEvents.push(TcpServerEvent(std::move(client)));
+        } // end critical section
+
+        eventsCondition.notify_one();
     }
 }
-
 }

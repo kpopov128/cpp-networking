@@ -187,4 +187,12 @@ void Socket::Close() noexcept
 	}
 }
 
+void Socket::Shutdown() noexcept
+{
+    if (socketHandle != InvalidSocket)
+    {
+        ShutdownSocket(socketHandle);
+    }
+}
+
 }

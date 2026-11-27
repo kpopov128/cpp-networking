@@ -46,4 +46,5 @@ std::optional<std::string> ReceiveMessage(Socket& socket)
 
     return message;
 }
-}
+
+} // namespace networking::protocol

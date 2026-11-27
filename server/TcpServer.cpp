@@ -28,22 +28,11 @@ void TcpServer::Run()
         AcceptClients();
     });
 
-    TcpServerEvent serverEvent;
     while (true)
     {
-        { // begin critical section
-            std::unique_lock lock(eventsMutex);
+        auto serverEvent = WaitForEvent();
 
-            while (serverEvents.empty())
-            {
-                eventsCondition.wait(lock);
-            }
-
-            serverEvent = std::move(serverEvents.front());
-            serverEvents.pop();
-        } // end critical section
-
-        switch(serverEvent.eventType)
+        switch (serverEvent.eventType)
         {
             case TcpServerEvent::Type::eClientAccepted:
             {
@@ -51,7 +40,7 @@ void TcpServer::Run()
                 {
                     { // begin critical section
                         std::lock_guard lock(eventsMutex);
-                        serverEvents.push(TcpServerEvent(threadId));
+                        serverEvents.push(TcpServerEvent::CreateClientDisconnected(threadId));
                     } // end critical section
 
                     eventsCondition.notify_one();
@@ -70,23 +59,80 @@ void TcpServer::Run()
                     clientConnections.erase(it);
             }
             break;
+
+            case TcpServerEvent::Type::eShutdownRequested:
+            {
+                shutdownRequested.store(true);
+                serverSocket.Shutdown();
+
+                for (auto& [threadId, connection] : clientConnections)
+                    connection->Stop();
+
+                clientConnections.clear();
+
+                return;
+            }
+            break;
         }
     }
 }
 
 void TcpServer::AcceptClients()
 {
-    while (true)
+    while (!shutdownRequested.load())
     {
-        auto client = serverSocket.Accept();
+        std::optional<Socket> client;
+
+        try
+        {
+            client = serverSocket.Accept();
+        }
+        catch (const std::exception& e)
+        {
+            if (shutdownRequested.load())
+                break;
+
+            std::cout << "Error during client connection: " << e.what() << std::endl;
+            break;
+        }
+
+        if (shutdownRequested.load())
+            return;
+
         std::cout << "Client connected!" << std::endl;
 
         { // begin critical section
             std::lock_guard lock(eventsMutex);
-            serverEvents.push(TcpServerEvent(std::move(client)));
+            serverEvents.push(TcpServerEvent::CreateClientAccepted(std::move(client.value())));
         } // end critical section
 
         eventsCondition.notify_one();
     }
 }
+
+TcpServerEvent TcpServer::WaitForEvent()
+{
+    std::unique_lock lock(eventsMutex);
+
+    while (serverEvents.empty())
+    {
+        eventsCondition.wait(lock);
+    }
+
+    TcpServerEvent serverEvent = std::move(serverEvents.front());
+    serverEvents.pop();
+
+    return serverEvent;
+}
+
+void TcpServer::Stop()
+{
+    { // begin critical section
+        std::lock_guard lock(eventsMutex);
+        serverEvents.push(TcpServerEvent::CreateShutdownRequested());
+    } // end critical section
+
+    eventsCondition.notify_one();
+}
+
 }

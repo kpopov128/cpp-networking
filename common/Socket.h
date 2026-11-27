@@ -24,6 +24,7 @@ public:
 	void Close() noexcept;
 	void Connect(const std::string& ipAddress, uint16_t port);
 	void Listen(int backlog = SOMAXCONN);
+    void Shutdown() noexcept;
 
 	int Send(const void* data, int size);
 	void SendAll(const void* data, int size);

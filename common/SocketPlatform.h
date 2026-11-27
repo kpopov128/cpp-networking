@@ -32,6 +32,11 @@ inline void CloseSocket(SocketHandle socket) noexcept
     closesocket(socket);
 }
 
+inline void ShutdownSocket(SocketHandle socket) noexcept
+{
+    shutdown(socket, SD_BOTH);
+}
+
 #else
 
 using SocketHandle = int;
@@ -48,6 +53,12 @@ inline int GetLastSocketError() noexcept
 inline void CloseSocket(SocketHandle socket) noexcept
 {
     close(socket);
+}
+
+
+inline void ShutdownSocket(SocketHandle socket) noexcept
+{
+    shutdown(socket, SHUT_RDWR);
 }
 
 #endif // #ifdef _WIN32

@@ -13,7 +13,7 @@ class ClientConnection
 public:
     ClientConnection(Socket&& socket, std::function<void(const std::thread::id)>&& disconnectedCb);
 
-    ~ClientConnection() = default;
+    ~ClientConnection() { Stop(); }
 
     ClientConnection(const ClientConnection&) = delete;
     ClientConnection(ClientConnection&&) = delete;
@@ -22,6 +22,8 @@ public:
     ClientConnection& operator=(ClientConnection&&) = delete;
 
     std::thread::id GetThreadId() const noexcept { return clientThread.GetId(); }
+
+    void Stop() { clientSocket.Shutdown(); }
 
 private:
     void HandleConnection();

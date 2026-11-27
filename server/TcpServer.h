@@ -3,46 +3,21 @@
 #include "Socket.h"
 #include "NetworkRuntime.h"
 #include "ClientConnection.h"
+#include "TcpServerEvent.h"
 
+#include <atomic>
 #include <condition_variable>
 #include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <memory>
 #include <mutex>
-#include <thread>
-#include <optional>
 #include <queue>
+#include <thread>
 
 
 namespace networking
 {
-
-struct TcpServerEvent
-{
-    enum class Type
-    {
-        eClientAccepted = 0,
-        eClientDisconnected
-    };
-
-    TcpServerEvent() = default;
-
-    explicit TcpServerEvent(Socket&& socket)
-        : eventType(Type::eClientAccepted), clientSocket(std::move(socket))
-    {
-    }
-
-    explicit TcpServerEvent(std::thread::id id)
-        : eventType(Type::eClientDisconnected), threadId(id)
-    {
-    }
-
-public:
-    Type eventType;
-    std::optional<Socket> clientSocket;
-    std::optional<std::thread::id> threadId;
-};
 
 class TcpServer
 {
@@ -50,9 +25,12 @@ public:
     TcpServer(const std::string& address, uint16_t port);
 
     void Run();
+    void Stop();
 
 private:
     void AcceptClients();
+
+    TcpServerEvent WaitForEvent();
 
 private:
     std::mutex eventsMutex;
@@ -60,6 +38,7 @@ private:
     NetworkRuntime winsockRuntime;
     Socket serverSocket;
     std::queue<TcpServerEvent> serverEvents;
+    std::atomic<bool> shutdownRequested{false};
     std::unordered_map<std::thread::id, std::unique_ptr<ClientConnection>> clientConnections;
 };
 

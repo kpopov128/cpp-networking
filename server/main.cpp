@@ -4,6 +4,7 @@
 #include <exception>
 
 #include "TcpServer.h"
+#include "ShutdownHandler.h"
 
 namespace 
 {
@@ -14,7 +15,11 @@ int main()
 {
     networking::TcpServer server("127.0.0.1", 9000);
 
+    networking::ShutdownHandler shutdownHandler([&]{server.Stop();});
+
     server.Run();
+
+    std::cout << "Server stoped!" << std::endl;
 
     return 0;
 }

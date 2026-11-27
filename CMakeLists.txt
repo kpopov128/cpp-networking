@@ -18,6 +18,7 @@ add_library(common STATIC
     common/Thread.h
     common/Thread.cpp
     common/NetworkRuntime.h
+    common/ShutdownHandler.h
     common/MessageProtocol.h
     common/MessageProtocol.cpp
 )
@@ -30,6 +31,7 @@ target_include_directories(common PUBLIC
 if(WIN32)
     target_sources(common PRIVATE
         common/NetworkRuntimeWindows.cpp
+        common/ShutdownHandlerWindows.cpp
     )
 
     target_link_libraries(common PUBLIC ws2_32)
@@ -37,6 +39,7 @@ if(WIN32)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_sources(common PRIVATE
         common/NetworkRuntimeLinux.cpp
+        common/ShutdownHandlerLinux.cpp
     )
 
 else()
@@ -47,10 +50,13 @@ endif()
 add_executable(server
     server/main.cpp
     server/TcpServer.h
+    server/TcpServerEvent.h
     server/TcpServer.cpp
     server/ClientConnection.h
     server/ClientConnection.cpp
 )
+
+
 
 target_link_libraries(server PRIVATE common)
 
